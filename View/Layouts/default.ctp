@@ -14,17 +14,7 @@
   $css .= $this->fetch('css');
   $html = $this->fetch('content');
 
-  $options = array(
-    'format'=>'default',
-    'header'=>array(
-      //'logo'=> 'AIS_400x400.jpg',
-      //'logo_width' => 12,
-      'title' => "Universidad Nacional Experimental Rómulo Gallegos",
-      'string' => "Área de Ingeniería de Sistemas"
-    ),
-  );
-
-  $this->Pdf->init($options);
+  $this->Pdf->init();
   //$this->Pdf->setCore(null);
 
   $this->Pdf->SetFont('helvetica', '', 8);

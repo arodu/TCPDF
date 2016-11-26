@@ -7,7 +7,7 @@ App::import('Vendor', 'TCPDF.tcpdf',array('file' => 'tcpdf/tcpdf.php'));
 class PdfHelper extends AppHelper {
   public $helpers = array('Html');
 
-  public $core;
+  public $core = null;
 
   private $options = array(
     'format'=>'default',  // default, memo, none
@@ -40,42 +40,42 @@ class PdfHelper extends AppHelper {
     )
   );
 
-	public function setOptions($options){
-		$this->options = array_replace_recursive($this->options, $options);
-	}
+  public function setOptions($options){
+    $this->options = array_replace_recursive($this->options, $options);
+  }
 
-	public function setCore($format = 'default'){
-		$obj=null;
-		if($format == 'default'){
-			$obj = new TypeDefault(
-				$this->options['pdf']['page_orientation'],
-				$this->options['pdf']['unit'],
-				$this->options['pdf']['page_format'],
-				true,
-				'UTF-8',
-				false
-			);
-		}elseif($format == 'memo'){
-			$obj = new TypeMemo(
-				$this->options['pdf']['page_orientation'],
-				$this->options['pdf']['unit'],
-				$this->options['pdf']['page_format'],
-				true,
-				'UTF-8',
-				false
-			);
-		}else{
-			$obj = new TCPDF(
-				$this->options['pdf']['page_orientation'],
-				$this->options['pdf']['unit'],
-				$this->options['pdf']['page_format'],
-				true,
-				'UTF-8',
-				false
-			);
-		}
-		return $obj;
-	}
+  public function setCore($format = 'default'){
+    $obj=null;
+    if($format == 'default'){
+      $obj = new TypeDefault(
+        $this->options['pdf']['page_orientation'],
+        $this->options['pdf']['unit'],
+        $this->options['pdf']['page_format'],
+        true,
+        'UTF-8',
+        false
+      );
+    }elseif($format == 'memo'){
+      $obj = new TypeMemo(
+        $this->options['pdf']['page_orientation'],
+        $this->options['pdf']['unit'],
+        $this->options['pdf']['page_format'],
+        true,
+        'UTF-8',
+        false
+      );
+    }else{
+      $obj = new TCPDF(
+        $this->options['pdf']['page_orientation'],
+        $this->options['pdf']['unit'],
+        $this->options['pdf']['page_format'],
+        true,
+        'UTF-8',
+        false
+      );
+    }
+    return $obj;
+  }
 
 	public function init( $options = array() ){
 		$this->setOptions($options);
@@ -129,30 +129,39 @@ class PdfHelper extends AppHelper {
 		}
 	}
 
-	public function SetFont($family, $style='', $size=null, $fontfile='', $subset='default', $out=true) {
-		$this->core->SetFont($family, $style, $size, $fontfile, $subset, $out);
-	}
+  //public function __call($name, $arguments){
+  //  return call_user_func_array(array(&$this->core, $name), $arguments);
+  //}
+  
+  public function __call($name, $arguments) {
+    if ($this->core) return call_user_func_array(array(&$this->core, $name), $arguments);
+    return false;
+  }
+  
+  public function SetFont($family, $style='', $size=null, $fontfile='', $subset='default', $out=true) {
+    $this->core->SetFont($family, $style, $size, $fontfile, $subset, $out);
+  }
 
-	public function AddPage($orientation='', $format='', $keepmargins=false, $tocpage=false) {
-		$this->core->AddPage($orientation, $format, $keepmargins, $tocpage);
-	}
+  public function AddPage($orientation='', $format='', $keepmargins=false, $tocpage=false) {
+    $this->core->AddPage($orientation, $format, $keepmargins, $tocpage);
+  }
 
-	public function lastPage($resetmargins=false) {
-		$this->core->lastPage($resetmargins);
-	}
+  public function lastPage($resetmargins=false) {
+    $this->core->lastPage($resetmargins);
+  }
 
-	public function Output($name='doc.pdf', $dest='I') {
-		$this->core->Output($name, $dest);
-	}
+  public function Output($name='doc.pdf', $dest='I') {
+    $this->core->Output($name, $dest);
+  }
 
-	public function writeHTML($html, $ln=true, $fill=false, $reseth=true, $cell=false, $align='') {
-		$this->core->writeHTML($html, $ln, $fill, $reseth, $cell, $align);
-	}
+  public function writeHTML($html, $ln=true, $fill=false, $reseth=true, $cell=false, $align='') {
+    $this->core->writeHTML($html, $ln, $fill, $reseth, $cell, $align);
+  }
 
-	public function SetMargins($left, $top, $right=-1, $keepmargins=false) {
-		$this->core->SetMargins($left, $top,$right,$keepmargins);
-	}
-
+  public function SetMargins($left, $top, $right=-1, $keepmargins=false) {
+    $this->core->SetMargins($left, $top,$right,$keepmargins);
+  }
+  /**/
 }
 
 
