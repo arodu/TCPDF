@@ -9,10 +9,7 @@ TCPDF Plugin for Cakephp 2.x
 ```php
 // app/Controller/AnyController.php
 public $helpers = array('TCPDF.Pdf');
-```
 
-```php
-// app/Controller/AnyController.php
 public function print(){
   $this->layout = 'TCPDF.default';
   $this->response->type('application/pdf');
