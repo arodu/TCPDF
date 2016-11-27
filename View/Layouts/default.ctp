@@ -15,7 +15,6 @@
   $html = $this->fetch('content');
 
   $this->Pdf->init();
-  //$this->Pdf->setCore(null);
 
   $this->Pdf->SetFont('helvetica', '', 8);
   $this->Pdf->AddPage();
