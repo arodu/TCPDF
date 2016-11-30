@@ -16,8 +16,10 @@ class PdfHelper extends AppHelper {
       'title' => PDF_HEADER_TITLE,
       'string' => PDF_HEADER_STRING,
     ),
-    'footer'=>array(
-      //'page_number'=>true,
+    'footer'=>array(   // marks => :page-number:, :url:, :url-app:
+      'left'=>':page-number:',
+      'right'=>':url-app:',
+      'center'=>false,
     ),
     'pdf'=>array(
       'title' => PDF_CREATOR,
@@ -65,7 +67,7 @@ class PdfHelper extends AppHelper {
         false
       );
     }else{
-      $obj = new TCPDF(
+      $obj = new MyTCPDF(
         $this->options['pdf']['page_orientation'],
         $this->options['pdf']['unit'],
         $this->options['pdf']['page_format'],
@@ -93,7 +95,8 @@ class PdfHelper extends AppHelper {
     $this->core->SetSubject(''); //$this->core->SetSubject('TCPDF Tutorial');
     $this->core->SetKeywords(''); //$this->core->SetKeywords('TCPDF, PDF, example, test, guide');
     
-    $this->core->url = $this->Html->url('/',true);
+    $this->core->url_app = $this->Html->url('/',true);
+    $this->core->url = $this->Html->url( null, true );
     
     // set default header data
     //$this->core->SetHeaderData(PDF_HEADER_LOGO, PDF_HEADER_LOGO_WIDTH, PDF_HEADER_TITLE.' 006', PDF_HEADER_STRING);
@@ -116,6 +119,8 @@ class PdfHelper extends AppHelper {
     
     // set image scale factor
     $this->core->setImageScale($this->options['pdf']['image_scale_ratio']);
+    
+    $this->core->footer = $this->options['footer'];
     
     // set some language-dependent strings (optional)
     //if (@file_exists(dirname(__FILE__).'/lang/eng.php')) {
@@ -164,8 +169,50 @@ class PdfHelper extends AppHelper {
   
 }
 
+class MyTCPDF extends TCPDF{
+  public $footer = array();
+  public $url_app = '';
+  
+  protected function changeMarks($mark){
+    
+    switch ($mark) {
+      case ':url-app:':
+        return $this->url_app;
+        break;
+      case ':url:':
+        return $this->url;
+        break;
+      case ':page-number:':
+        $w_page = isset($this->l['w_page']) ? $this->l['w_page'].' ' : '';
+        if (empty($this->pagegroups)) {
+          $pagenumtxt = $w_page.$this->getAliasNumPage().' / '.$this->getAliasNbPages();
+        } else {
+          $pagenumtxt = $w_page.$this->getPageNumGroupAlias().' / '.$this->getPageGroupAlias();
+        }
+        //$this->SetY($cur_y);
+        //Print page number
+        if ($this->getRTL()) {
+          //$this->SetX($this->original_rMargin);
+          //$this->Cell(0, 0, $pagenumtxt, 'T', 0, 'L');
+          return $pagenumtxt;
+        } else {
+          //$this->SetX($this->original_lMargin);
+          //$this->Cell(0, 0, $this->getAliasRightShift().$pagenumtxt, 'T', 0, 'R');
+          return $this->getAliasRightShift().$pagenumtxt;
+        }
+        break;
+    }
+    
+    
+    return $mark;
+  }
+}
 
-class TypeDefault extends TCPDF{
+
+class TypeDefault extends MyTCPDF{
+  
+  
+  
   public function Header() {
     if ($this->header_xobjid === false) {
       // start a new XObject Template
@@ -261,63 +308,87 @@ class TypeDefault extends TCPDF{
     } /**/
   }
 
+
+  public function Footer() {
+    
+    //if (!empty($this->url)) {
+    //  $this->Cell(0, 0, $this->url, 'T', 0, 'L');
+    //}
+    
+    
+    if(isset($this->footer['left']) && $this->footer['left']){
+      $this->Cell(0, 0, $this->changeMarks($this->footer['left']), 'T', 0, 'L');
+    }
+    
+    if(isset($this->footer['left']) && $this->footer['center']){
+      $this->Cell(0, 0, $this->changeMarks($this->footer['center']), 'T', 0, 'C');
+    }
+    
+    if(isset($this->footer['left']) && $this->footer['right']){
+      $this->Cell(0, 0, $this->changeMarks($this->footer['right']), 'T', 0, 'R');
+    }
+  }
+
   /**
   * This method is used to render the page footer.
   * It is automatically called by AddPage() and could be overwritten in your own inherited class.
   * @public
   */
-  public function Footer() {
-    $cur_y = $this->y;
-    $this->SetTextColorArray($this->footer_text_color);
-    //set style for cell border
-    $line_width = (0.85 / $this->k);
-    $this->SetLineStyle(array('width' => $line_width, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => $this->footer_line_color));
+  //public function Footer() {
+  //  $cur_y = $this->y;
+  //  $this->SetTextColorArray($this->footer_text_color);
+  //  //set style for cell border
+  //  $line_width = (0.85 / $this->k);
+  //  $this->SetLineStyle(array('width' => $line_width, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => $this->footer_line_color));
 
-    /*
-    //print document barcode
-    $barcode = $this->getBarcode();
-    if (!empty($barcode)) {
-      $this->Ln($line_width);
-      $barcode_width = round(($this->w - $this->original_lMargin - $this->original_rMargin) / 3);
-      $style = array(
-        'position' => $this->rtl?'R':'L',
-        'align' => $this->rtl?'R':'L',
-        'stretch' => false,
-        'fitwidth' => true,
-        'cellfitalign' => '',
-        'border' => false,
-        'padding' => 0,
-        'fgcolor' => array(0,0,0),
-        'bgcolor' => false,
-        'text' => false
-      );
-      $this->write1DBarcode($barcode, 'C128', '', $cur_y + $line_width, '', (($this->footer_margin / 3) - $line_width), 0.3, $style, '');
-    }
-    */
+  //  /*
+  //  //print document barcode
+  //  $barcode = $this->getBarcode();
+  //  if (!empty($barcode)) {
+  //    $this->Ln($line_width);
+  //    $barcode_width = round(($this->w - $this->original_lMargin - $this->original_rMargin) / 3);
+  //    $style = array(
+  //      'position' => $this->rtl?'R':'L',
+  //      'align' => $this->rtl?'R':'L',
+  //      'stretch' => false,
+  //      'fitwidth' => true,
+  //      'cellfitalign' => '',
+  //      'border' => false,
+  //      'padding' => 0,
+  //      'fgcolor' => array(0,0,0),
+  //      'bgcolor' => false,
+  //      'text' => false
+  //    );
+  //    $this->write1DBarcode($barcode, 'C128', '', $cur_y + $line_width, '', (($this->footer_margin / 3) - $line_width), 0.3, $style, '');
+  //  }
+  //  */
 
-    if (!empty($this->url)) {
-      $this->Cell(0, 0, $this->url, 'T', 0, 'L');
-    }
-    
-    $w_page = isset($this->l['w_page']) ? $this->l['w_page'].' ' : '';
-    if (empty($this->pagegroups)) {
-      $pagenumtxt = $w_page.$this->getAliasNumPage().' / '.$this->getAliasNbPages();
-    } else {
-      $pagenumtxt = $w_page.$this->getPageNumGroupAlias().' / '.$this->getPageGroupAlias();
-    }
-    $this->SetY($cur_y);
-    //Print page number
-    if ($this->getRTL()) {
-      $this->SetX($this->original_rMargin);
-      $this->Cell(0, 0, $pagenumtxt, 'T', 0, 'L');
-    } else {
-      $this->SetX($this->original_lMargin);
-      $this->Cell(0, 0, $this->getAliasRightShift().$pagenumtxt, 'T', 0, 'R');
-    }
-  }
+  //  if (!empty($this->url)) {
+  //    $this->Cell(0, 0, $this->url, 'T', 0, 'L');
+  //  }
+  //  
+  //  $w_page = isset($this->l['w_page']) ? $this->l['w_page'].' ' : '';
+  //  if (empty($this->pagegroups)) {
+  //    $pagenumtxt = $w_page.$this->getAliasNumPage().' / '.$this->getAliasNbPages();
+  //  } else {
+  //    $pagenumtxt = $w_page.$this->getPageNumGroupAlias().' / '.$this->getPageGroupAlias();
+  //  }
+  //  $this->SetY($cur_y);
+  //  //Print page number
+  //  if ($this->getRTL()) {
+  //    $this->SetX($this->original_rMargin);
+  //    $this->Cell(0, 0, $pagenumtxt, 'T', 0, 'L');
+  //  } else {
+  //    $this->SetX($this->original_lMargin);
+  //    $this->Cell(0, 0, $this->getAliasRightShift().$pagenumtxt, 'T', 0, 'R');
+  //  }
+  //} 
 }
 
-class TypeMemo extends TCPDF {
+class TypeMemo extends MyTCPDF {
+  
+  public $footer = array();
+  
   public function Header() {
     $headerdata = $this->getHeaderData();
     $this->Image(K_PATH_IMAGES.$headerdata['logo'], '', '', $headerdata['logo_width']);
