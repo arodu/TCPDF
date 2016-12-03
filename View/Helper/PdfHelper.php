@@ -39,6 +39,7 @@ class PdfHelper extends AppHelper {
       'margin_footer' => PDF_MARGIN_FOOTER,
       'margin_bottom' => PDF_MARGIN_BOTTOM,
       'image_scale_ratio' => PDF_IMAGE_SCALE_RATIO,
+      'page_number_format'=>':page: of :pages:',
     )
   );
 
@@ -82,12 +83,14 @@ class PdfHelper extends AppHelper {
   public function init( $options = array() ){
     $this->setOptions($options);
     
+    
     $this->core = $this->setCore($this->options['format']);
     
     if($this->options['format'] == 'none'){
       $this->core->setPrintHeader(false);
       $this->core->setPrintFooter(false);
     }
+    //$this->core->page_number_format = $this->options['pdf']['$page_number_format'];
     
     $this->core->SetCreator($this->options['pdf']['creator']);
     $this->core->SetAuthor('');
@@ -172,6 +175,7 @@ class PdfHelper extends AppHelper {
 class MyTCPDF extends TCPDF{
   public $footer = array();
   public $url_app = '';
+  public $page_number_format = array();
   
   protected function changeMarks($mark){
     
@@ -183,29 +187,48 @@ class MyTCPDF extends TCPDF{
         return $this->url;
         break;
       case ':page-number:':
-        $w_page = isset($this->l['w_page']) ? $this->l['w_page'].' ' : '';
-        if (empty($this->pagegroups)) {
-          $pagenumtxt = $w_page.$this->getAliasNumPage().' / '.$this->getAliasNbPages();
-        } else {
-          $pagenumtxt = $w_page.$this->getPageNumGroupAlias().' / '.$this->getPageGroupAlias();
-        }
-        //$this->SetY($cur_y);
-        //Print page number
-        if ($this->getRTL()) {
-          //$this->SetX($this->original_rMargin);
-          //$this->Cell(0, 0, $pagenumtxt, 'T', 0, 'L');
-          return $pagenumtxt;
-        } else {
-          //$this->SetX($this->original_lMargin);
-          //$this->Cell(0, 0, $this->getAliasRightShift().$pagenumtxt, 'T', 0, 'R');
-          return $this->getAliasRightShift().$pagenumtxt;
-        }
+        return $this->pageNumber();
+        //$w_page = isset($this->l['w_page']) ? $this->l['w_page'].' ' : '';
+        //if (empty($this->pagegroups)) {
+        //  $pagenumtxt = $w_page.$this->getAliasNumPage().' / '.$this->getAliasNbPages();
+        //} else {
+        //  $pagenumtxt = $w_page.$this->getPageNumGroupAlias().' / '.$this->getPageGroupAlias();
+        //}
+        ////$this->SetY($cur_y);
+        ////Print page number
+        //if ($this->getRTL()) {
+        //  //$this->SetX($this->original_rMargin);
+        //  //$this->Cell(0, 0, $pagenumtxt, 'T', 0, 'L');
+        //  return $pagenumtxt;
+        //} else {
+        //  //$this->SetX($this->original_lMargin);
+        //  //$this->Cell(0, 0, $this->getAliasRightShift().$pagenumtxt, 'T', 0, 'R');
+        //  return $this->getAliasRightShift().$pagenumtxt;
+        //}
         break;
     }
     
-    
     return $mark;
   }
+  
+  public function pageNumber(){
+    //$page_number = $this->options['pdf']['page_number_format'];
+    $page_number = 'Página :page: de :pages:';
+    //$w_page = isset($this->l['w_page']) ? $this->l['w_page'].' ' : '';
+    if (empty($this->pagegroups)) {
+      $page = $this->getAliasNumPage();
+      $pages = $this->getAliasNbPages();
+    } else {
+      $page = $this->getPageNumGroupAlias();
+      $pages = $this->getPageGroupAlias();
+    }
+    
+    $page_number = str_replace(":page:", $page, $page_number);
+    $page_number = str_replace(":pages:", $pages, $page_number);
+    
+    return $page_number;
+  }
+  
 }
 
 
