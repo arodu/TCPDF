@@ -15,6 +15,7 @@ class PdfHelper extends AppHelper {
       'logo_width' => 10,
       'title' => PDF_HEADER_TITLE,
       'string' => PDF_HEADER_STRING,
+      'qr-code'=> false,
     ),
     'footer'=>array(   // marks => :page-number:, :url:, :url-app:
       'left'=>':page-number:',
@@ -111,6 +112,8 @@ class PdfHelper extends AppHelper {
     
     // set default monospaced font
     $this->core->SetDefaultMonospacedFont($this->options['pdf']['font_monospaced']);
+    
+    $this->core->setBarcode($this->options['header']['qr-code']);
     
     // set margins
     $this->core->SetMargins($this->options['pdf']['margin_left'], $this->options['pdf']['margin_top'], $this->options['pdf']['margin_right']);
@@ -235,7 +238,6 @@ class MyTCPDF extends TCPDF{
 class TypeDefault extends MyTCPDF{
   
   
-  
   public function Header() {
     if ($this->header_xobjid === false) {
       // start a new XObject Template
@@ -314,6 +316,7 @@ class TypeDefault extends MyTCPDF{
     }
 
     $barcode = $this->getBarcode();
+    //$barcode = $this->options['qr-code'];
     if (!empty($barcode)) {
       //$this->Ln($line_width);
       $barcode_width = round(($this->w - $this->original_lMargin - $this->original_rMargin) / 3);
